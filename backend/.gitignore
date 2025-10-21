@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.so
+*.dll
+
+# Virtual environment
+venv/
+.env/
+ENV/
+*.egg-info/
+
+# Node or build folders (if any)
+node_modules/
+dist/
+build/
