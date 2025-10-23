@@ -26,9 +26,11 @@ const LiveCamera = ({ setDetectedObjects, onSelectObject, detectedObjects }) => 
         formData.append("file", blob, "frame.jpg");
 
         try {
-          const res = await axios.post("http://localhost:8000/detect", formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
+          const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
+const res = await axios.post(`${API_URL}/detect`, formData, {
+  headers: { "Content-Type": "multipart/form-data" },
+});
+
 
           const predictions = res.data.predictions || [];
           if (setDetectedObjects) setDetectedObjects(predictions); // Sync with parent

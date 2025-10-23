@@ -2,9 +2,11 @@ import axios from "axios";
 
 export async function fetchEcoInfo(objectName) {
   try {
-    const res = await axios.post("http://localhost:8000/eco-info", {
-      object_name: objectName,
-    });
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000";
+const res = await axios.post(`${API_URL}/eco-info`, {
+  object_name: objectName,
+});
+
 
     const data = res.data;
 
