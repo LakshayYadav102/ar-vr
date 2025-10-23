@@ -1,21 +1,19 @@
 import React, { useRef, useEffect, useState } from "react";
 import Webcam from "react-webcam";
 import axios from "axios";
+import EcoInfoSidebar from "./EcoInfoSidebar";
 import { fetchEcoInfo } from "../ecoAI";
 
-const LiveCamera = () => {
+const LiveCamera = ({ setDetectedObjects, onSelectObject, detectedObjects }) => {
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
-
-  const [detectedObjects, setDetectedObjects] = useState([]);
   const [selectedObject, setSelectedObject] = useState(null);
+  const [pulseRadius, setPulseRadius] = useState(0); // For animation effect
 
-  // 🔎 Detect objects from backend YOLO
   const detectObjects = async () => {
     if (!webcamRef.current || webcamRef.current.video.readyState !== 4) return;
 
     const video = webcamRef.current.video;
-
     const canvas = document.createElement("canvas");
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
@@ -33,9 +31,8 @@ const LiveCamera = () => {
           });
 
           const predictions = res.data.predictions || [];
-          setDetectedObjects(predictions);
+          if (setDetectedObjects) setDetectedObjects(predictions); // Sync with parent
 
-          // 🎯 Draw boxes
           const drawCtx = canvasRef.current.getContext("2d");
           drawCtx.clearRect(0, 0, drawCtx.canvas.width, drawCtx.canvas.height);
 
@@ -55,6 +52,74 @@ const LiveCamera = () => {
               p.bbox[0],
               p.bbox[1] > 10 ? p.bbox[1] - 5 : 10
             );
+
+            // Advanced futuristic AR marker
+            const xCenter = p.bbox[0] + (p.bbox[2] - p.bbox[0]) / 2;
+            const yTop = p.bbox[1] - 10; // Position above the box
+            const baseRadius = 6;
+            const minY = 10;
+
+            // Glowing core with gradient
+            const gradient = drawCtx.createRadialGradient(
+              xCenter,
+              yTop > minY ? yTop : minY,
+              0,
+              xCenter,
+              yTop > minY ? yTop : minY,
+              baseRadius
+            );
+            gradient.addColorStop(0, "rgba(50, 255, 50, 1)"); // Bright lime core
+            gradient.addColorStop(1, "rgba(0, 255, 0, 0.3)"); // Fade to transparent
+            drawCtx.beginPath();
+            drawCtx.arc(
+              xCenter,
+              yTop > minY ? yTop : minY,
+              baseRadius,
+              0,
+              2 * Math.PI
+            );
+            drawCtx.fillStyle = gradient;
+            drawCtx.fill();
+            drawCtx.shadowBlur = 10;
+            drawCtx.shadowColor = "rgba(0, 255, 0, 0.5)";
+            drawCtx.fill();
+            drawCtx.shadowBlur = 0;
+
+            // Holographic ring
+            drawCtx.beginPath();
+            drawCtx.arc(
+              xCenter,
+              yTop > minY ? yTop : minY,
+              baseRadius + 2,
+              0,
+              2 * Math.PI
+            );
+            drawCtx.strokeStyle = "rgba(0, 255, 0, 0.3)";
+            drawCtx.lineWidth = 1;
+            drawCtx.stroke();
+
+            // Pulsing outer glow
+            const pulseSize = baseRadius + pulseRadius;
+            const pulseGradient = drawCtx.createRadialGradient(
+              xCenter,
+              yTop > minY ? yTop : minY,
+              0,
+              xCenter,
+              yTop > minY ? yTop : minY,
+              pulseSize
+            );
+            pulseGradient.addColorStop(0, "rgba(0, 255, 0, 0.2)");
+            pulseGradient.addColorStop(1, "rgba(0, 255, 0, 0)");
+            drawCtx.beginPath();
+            drawCtx.arc(
+              xCenter,
+              yTop > minY ? yTop : minY,
+              pulseSize,
+              0,
+              2 * Math.PI
+            );
+            drawCtx.fillStyle = pulseGradient;
+            drawCtx.fill();
           });
         } catch (err) {
           console.error("YOLO detection error:", err);
@@ -64,25 +129,46 @@ const LiveCamera = () => {
     );
   };
 
-  // 🖱️ Click handler → fetch eco info
   const handleSelectObject = async (objectName) => {
-    const info = await fetchEcoInfo(objectName);
-    setSelectedObject({
-      name: objectName,
-      ...info,
-    });
+    try {
+      const info = await fetchEcoInfo(objectName);
+      const selected = {
+        name: objectName,
+        ...info,
+      };
+      setSelectedObject(selected);
+      if (onSelectObject) onSelectObject(selected); // Pass to parent
+    } catch (err) {
+      console.error("Error fetching eco info:", err);
+      const fallback = {
+        name: objectName,
+        recyclable: "Unknown",
+        carbon: "Unknown",
+        alternative: "Unknown",
+        summary: "No data available.",
+        videos: [],
+        links: [],
+      };
+      setSelectedObject(fallback);
+      if (onSelectObject) onSelectObject(fallback); // Pass fallback to parent
+    }
   };
 
-  // 🔁 Run detection every second
   useEffect(() => {
     const interval = setInterval(detectObjects, 1000);
-    return () => clearInterval(interval);
+    const animatePulse = () => {
+      setPulseRadius((prev) => (prev >= 3 ? 0 : prev + 0.1)); // Pulse effect from 0 to 3px
+      requestAnimationFrame(animatePulse);
+    };
+    animatePulse();
+    return () => {
+      clearInterval(interval);
+    };
   }, []);
 
   return (
     <div style={{ display: "flex", gap: "20px" }}>
-      {/* 📷 Webcam with bounding boxes */}
-      <div style={{ position: "relative" }}>
+      <div style={{ position: "relative", flex: "2" }}>
         <Webcam ref={webcamRef} audio={false} style={{ width: 640, height: 480 }} />
         <canvas
           ref={canvasRef}
@@ -91,91 +177,13 @@ const LiveCamera = () => {
           style={{ position: "absolute", top: 0, left: 0 }}
         />
       </div>
-
-      {/* 📋 Sidebar with detected objects */}
-      <div
-        style={{
-          maxHeight: "480px",
-          overflowY: "auto",
-          padding: "10px",
-          background: "#e0ffe0",
-          width: "200px",
-          borderRadius: "8px",
-        }}
-      >
-        <h4>Detected Items:</h4>
-        <ul>
-          {detectedObjects.map((obj, i) => (
-            <li
-              key={i}
-              style={{ cursor: "pointer", margin: "5px 0" }}
-              onClick={() => handleSelectObject(obj.class)}
-            >
-              {obj.class} ({Math.round(obj.confidence * 100)}%)
-            </li>
-          ))}
-        </ul>
+      <div style={{ flex: "1", minWidth: "300px" }}>
+        <EcoInfoSidebar
+          detectedObjects={detectedObjects}
+          selectedObject={selectedObject}
+          onSelectObject={handleSelectObject}
+        />
       </div>
-
-      {/* 📝 Info panel for selected object */}
-      {selectedObject && (
-        <div
-          style={{
-            maxWidth: "400px",
-            background: "#f0f0f0",
-            padding: "15px",
-            borderRadius: "8px",
-            overflowY: "auto",
-            maxHeight: "480px",
-          }}
-        >
-          <h3>{selectedObject.name.toUpperCase()}</h3>
-          <p>
-            <b>♻️ Recyclable:</b> {selectedObject.recyclable}
-          </p>
-          <p>
-            <b>💨 Carbon Impact:</b> {selectedObject.carbon}
-          </p>
-          <p>
-            <b>✅ Alternative:</b> {selectedObject.alternative}
-          </p>
-          <p>
-            <b>Summary:</b> {selectedObject.summary}
-          </p>
-
-          {selectedObject.videos && selectedObject.videos.length > 0 && (
-            <>
-              <h4>🎥 Videos</h4>
-              <ul>
-                {selectedObject.videos.map((v, i) =>
-                  v.link && typeof v.link === "string" ? (
-                    <li key={i}>
-                      <a href={v.link} target="_blank" rel="noreferrer">
-                        {v.title}
-                      </a>
-                    </li>
-                  ) : null
-                )}
-              </ul>
-            </>
-          )}
-
-          {selectedObject.links && Array.isArray(selectedObject.links) && selectedObject.links.length > 0 && (
-            <p>
-              🌐 {selectedObject.links.map((link, i) =>
-                typeof link === "string" && link.trim() !== "" ? (
-                  <span key={i}>
-                    <a href={link} target="_blank" rel="noreferrer">
-                      {link}
-                    </a>
-                    <br />
-                  </span>
-                ) : null
-              )}
-            </p>
-          )}
-        </div>
-      )}
     </div>
   );
 };

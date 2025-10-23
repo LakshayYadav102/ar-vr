@@ -1,38 +1,79 @@
-.App {
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background 0.3s, color 0.3s;
+}
+
+body.light-theme {
+  background: linear-gradient(180deg, #f0f4f8, #d1e7dd);
+  color: #2c3e50;
+}
+
+video {
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* Ensure Babylon.js canvas layers correctly */
+#babylon-canvas {
+  z-index: 10; /* Above 2D canvas */
+}
+
+/* Global styles for content sections */
+.home-content, .analytics-content, .about-content {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.analytics-stats {
+  display: flex;
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.stat-card {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  background: rgba(6,18,10,0.5);
   text-align: center;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.stat-card h3 {
+  margin: 0 0 5px;
+  font-size: 16px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.stat-card p {
+  margin: 0;
+  font-size: 20px;
+  font-weight: bold;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+.scan-history-list {
+  list-style: none;
+  padding: 0;
+  color: #cdefd6;
 }
 
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.scan-history-list li {
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(120, 240, 150, 0.08);
 }

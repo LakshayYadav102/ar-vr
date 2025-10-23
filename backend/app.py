@@ -6,23 +6,26 @@ from PIL import Image
 import requests
 import io
 import json
+import os
+from dotenv import load_dotenv
 
-# --- CONFIG ---
-OPENROUTER_API_KEY = "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"
+# --- LOAD ENV ---
+load_dotenv()
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+
+if not OPENROUTER_API_KEY:
+    raise ValueError("❌ Missing OPENROUTER_API_KEY in .env file!")
+
+# --- YOLO MODEL ---
 model = YOLO("yolov8s.pt")
-
 
 # --- FASTAPI APP ---
 app = FastAPI()
 
-# ✅ Allowed origins (React frontend)
-origins = [
-    "http://localhost:3000",  # frontend React dev server
-]
-
+# --- CORS ---
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,     # or ["*"] during dev if issues persist
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -32,7 +35,6 @@ app.add_middleware(
 class ObjectRequest(BaseModel):
     object_name: str
 
-# --- ROUTES ---
 
 # 🎯 Object detection route
 @app.post("/detect")
@@ -58,59 +60,57 @@ async def detect(file: UploadFile = File(...)):
 @app.post("/eco-info")
 def get_eco_info(req: ObjectRequest):
     object_name = req.object_name
+
     prompt = f"""
     Provide structured eco-friendly info about "{object_name}".
-    Return only strict JSON with keys:
+    Return only valid JSON with keys:
     recyclable, carbon, alternative, summary, videos, links.
-    - recyclable: string ("Yes"/"No"/"Partially")
-    - carbon: string description of footprint
-    - alternative: string eco-friendly replacement
-    - summary: short summary text
-    - videos: array of valid YouTube URLs
-    - links: array of valid website URLs
+    Example:
+    {{
+      "recyclable": "Yes",
+      "carbon": "Moderate impact",
+      "alternative": "Glass or metal version",
+      "summary": "Plastic bottles are recyclable but contribute to pollution.",
+      "videos": ["https://youtube.com/..."],
+      "links": ["https://www.earth.org/..."]
+    }}
     """
 
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "HTTP-Referer": "http://localhost:3000",
+        "User-Agent": "GreenVerse-ARVRHub/1.0",
     }
 
     data = {
-        "model": "google/gemma-3-27b-it:free",
-        "messages": [{"role": "user", "content": prompt}]
+        "model": "gpt-3.5-turbo",  # Use a widely available model
+        "messages": [{"role": "user", "content": prompt}],
     }
 
     try:
-        response = requests.post("https://openrouter.ai/api/v1/chat/completions",
-                                 headers=headers, json=data, timeout=30)
-    except Exception as e:
-        return {
-            "recyclable": "Unknown",
-            "carbon": "Unknown",
-            "alternative": "Unknown",
-            "summary": f"API request failed: {str(e)}",
-            "videos": [f"https://www.youtube.com/results?search_query={object_name}+recycling+eco-friendly"],
-            "links": []
-        }
+        response = requests.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers=headers,
+            json=data,
+            timeout=30
+        )
 
-    if response.status_code != 200:
-        return {
-            "recyclable": "Unknown",
-            "carbon": "Unknown",
-            "alternative": "Unknown",
-            "summary": f"OpenRouter error: {response.status_code}",
-            "videos": [f"https://www.youtube.com/results?search_query={object_name}+recycling+eco-friendly"],
-            "links": []
-        }
+        if response.status_code != 200:
+            return {
+                "recyclable": "Unknown",
+                "carbon": "Unknown",
+                "alternative": "Unknown",
+                "summary": f"OpenRouter error {response.status_code}: {response.text}",
+                "videos": [f"https://www.youtube.com/results?search_query={object_name}+recycling"],
+                "links": []
+            }
 
-    try:
         content = response.json()["choices"][0]["message"]["content"]
-
-        # Ensure content is valid JSON (sometimes LLM returns text with ```json)
         content_clean = content.strip().replace("```json", "").replace("```", "")
+
         parsed = json.loads(content_clean)
 
-        # 🔒 Guarantee keys exist
         return {
             "recyclable": parsed.get("recyclable", "Unknown"),
             "carbon": parsed.get("carbon", "Unknown"),
@@ -125,7 +125,7 @@ def get_eco_info(req: ObjectRequest):
             "recyclable": "Unknown",
             "carbon": "Unknown",
             "alternative": "Unknown",
-            "summary": f"Parsing error: {str(e)}",
-            "videos": [f"https://www.youtube.com/results?search_query={object_name}+recycling+eco-friendly"],
+            "summary": f"Backend error: {str(e)}",
+            "videos": [f"https://www.youtube.com/results?search_query={object_name}+recycling"],
             "links": []
         }

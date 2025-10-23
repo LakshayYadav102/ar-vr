@@ -1,0 +1,121 @@
+.eco-dashboard {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  height: 100%;
+  background: radial-gradient(circle at 10% 10%, rgba(18,50,28,0.9), rgba(6,16,8,1));
+  color: #e9fff0;
+  font-family: "Inter", "Poppins", sans-serif;
+  overflow-x: hidden;
+}
+
+.ev-main {
+  display: flex;
+  flex: 1;
+  gap: 20px;
+  padding: 20px;
+  overflow: hidden;
+}
+
+.ev-left {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+}
+
+.ev-left-inner {
+  flex: 1;
+  padding: 16px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(18,50,28,0.45), rgba(6,8,6,0.25));
+  border: 1px solid rgba(120, 240, 150, 0.06);
+  box-shadow: inset 0 -6px 30px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ev-camera-wrap {
+  flex: 1;
+}
+
+.ev-right-panel {
+  flex: 1;
+  min-width: 300px;
+  max-width: 400px;
+  border-radius: 12px;
+  padding: 16px;
+  background: linear-gradient(180deg, rgba(6,18,10,0.5), rgba(3,8,6,0.35));
+  border: 1px solid rgba(100,220,150,0.05);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+  overflow-y: auto;
+}
+
+.ev-muted {
+  color: #bfeed2;
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+.ev-section {
+  margin: 15px 0;
+}
+
+.ev-small {
+  font-size: 12px;
+  color: #cdefd6;
+}
+
+.eco-insights {
+  display: flex;
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.eco-insight-card {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(10,30,20,0.4), rgba(5,10,8,0.2));
+  border: 1px solid rgba(100,220,150,0.05);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.eco-insight-card h4 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.eco-insight-card p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #cdefd6;
+}
+
+.eco-scan-history {
+  list-style: none;
+  padding-left: 0;
+  max-height: 150px;
+  overflow-y: auto;
+  margin-top: 8px;
+}
+
+.eco-scan-history li {
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(120, 240, 150, 0.08);
+  font-size: 14px;
+  color: #cdefd6;
+}
+
+@media (max-width: 900px) {
+  .ev-main {
+    flex-direction: column;
+  }
+  .ev-right-panel {
+    min-width: 100%;
+    max-width: none;
+  }
+  .eco-insights {
+    flex-direction: column;
+  }
+}

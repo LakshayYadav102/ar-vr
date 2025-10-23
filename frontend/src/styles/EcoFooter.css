@@ -1,0 +1,9 @@
+.eco-footer {
+  margin-top: auto;
+  text-align: center;
+  padding: 12px;
+  font-size: 13px;
+  border-top: 1px solid rgba(120, 240, 170, 0.04);
+  color: #bfeed2;
+  background: rgba(0,0,0,0.15);
+}

@@ -1,0 +1,51 @@
+/* src/styles/EcoInfoSidebar.css */
+.eco-info-sidebar {
+  flex: 1;
+  padding: 16px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(6,18,10,0.5), rgba(3,8,6,0.35));
+  border: 1px solid rgba(100,220,150,0.05);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.45);
+  overflow-y: auto;
+  max-height: 480px;
+}
+
+.eco-muted {
+  font-size: 13px;
+  color: #cdefd6;
+  opacity: 0.85;
+  margin-bottom: 12px;
+}
+
+.eco-card.eco-tip {
+  background: rgba(18,50,28,0.25);
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.eco-section {
+  margin-top: 14px;
+}
+
+.eco-object-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.eco-object-list li {
+  cursor: pointer;
+  padding: 6px 4px;
+  border-bottom: 1px solid rgba(120,240,150,0.1);
+  transition: background 0.2s;
+}
+
+.eco-object-list li:hover {
+  background: rgba(120,240,150,0.05);
+}
+
+.eco-object-details {
+  margin-top: 16px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(120,240,150,0.1);
+}
