@@ -35,7 +35,6 @@ app.add_middleware(
 class ObjectRequest(BaseModel):
     object_name: str
 
-
 # 🎯 Object detection route
 @app.post("/detect")
 async def detect(file: UploadFile = File(...)):
@@ -54,7 +53,6 @@ async def detect(file: UploadFile = File(...)):
             })
 
     return {"predictions": detected_objects}
-
 
 # 🌱 Eco info route
 @app.post("/eco-info")
@@ -84,7 +82,7 @@ def get_eco_info(req: ObjectRequest):
     }
 
     data = {
-        "model": "gpt-3.5-turbo",  # Use a widely available model
+        "model": "gpt-3.5-turbo",
         "messages": [{"role": "user", "content": prompt}],
     }
 
@@ -129,3 +127,9 @@ def get_eco_info(req: ObjectRequest):
             "videos": [f"https://www.youtube.com/results?search_query={object_name}+recycling"],
             "links": []
         }
+
+
+# ✅ Run Server
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app:app", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)), reload=True)
