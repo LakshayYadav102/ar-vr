@@ -22,10 +22,13 @@ model = YOLO("yolov8s.pt")
 # --- FASTAPI APP ---
 app = FastAPI()
 
-# --- CORS ---
+# --- ✅ CORS FIXED FOR NETLIFY + LOCAL ---
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[
+        "https://earnest-chebakia-cd10ff.netlify.app",  # your Netlify domain
+        "http://localhost:3000",                        # for local testing
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -35,24 +38,30 @@ app.add_middleware(
 class ObjectRequest(BaseModel):
     object_name: str
 
+
 # 🎯 Object detection route
 @app.post("/detect")
 async def detect(file: UploadFile = File(...)):
-    contents = await file.read()
-    img = Image.open(io.BytesIO(contents)).convert("RGB")
+    try:
+        contents = await file.read()
+        img = Image.open(io.BytesIO(contents)).convert("RGB")
 
-    results = model(img)
-    detected_objects = []
+        results = model(img)
+        detected_objects = []
 
-    for r in results:
-        for box, cls, conf in zip(r.boxes.xyxy, r.boxes.cls, r.boxes.conf):
-            detected_objects.append({
-                "class": model.names[int(cls)],
-                "confidence": float(conf),
-                "bbox": [float(x) for x in box]
-            })
+        for r in results:
+            for box, cls, conf in zip(r.boxes.xyxy, r.boxes.cls, r.boxes.conf):
+                detected_objects.append({
+                    "class": model.names[int(cls)],
+                    "confidence": float(conf),
+                    "bbox": [float(x) for x in box]
+                })
 
-    return {"predictions": detected_objects}
+        return {"predictions": detected_objects}
+
+    except Exception as e:
+        return {"error": f"Detection failed: {str(e)}"}
+
 
 # 🌱 Eco info route
 @app.post("/eco-info")
@@ -77,7 +86,7 @@ def get_eco_info(req: ObjectRequest):
     headers = {
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
         "Content-Type": "application/json",
-        "HTTP-Referer": "http://localhost:3000",
+        "HTTP-Referer": "https://earnest-chebakia-cd10ff.netlify.app",
         "User-Agent": "GreenVerse-ARVRHub/1.0",
     }
 
@@ -129,7 +138,7 @@ def get_eco_info(req: ObjectRequest):
         }
 
 
-# ✅ Run Server
+# ✅ Run Server (local only)
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app:app", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)), reload=True)
